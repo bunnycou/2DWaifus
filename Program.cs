@@ -18,7 +18,7 @@ namespace _2DWaifus
         public static Program instance = new Program();
         static void Main(string[] args)
         {
-            instance.startBotAsync().GetAwaiter.GetResult();
+            instance.startBotAsync().GetAwaiter().GetResult();
         }
 
         private Task botReady(ReadyEventArgs e)
