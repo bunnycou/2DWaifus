@@ -2,9 +2,10 @@
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
+using System.IO;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace _2DWaifus
 {
@@ -24,8 +25,65 @@ namespace _2DWaifus
             await ctx.RespondAsync($"{emoji} Pong! Ping: {ctx.Client.Ping}ms");
         }
     }
+
     class _2DWaifusRolls : BaseCommandModule
     {
+        public static DiscordColor blue = new DiscordColor("00aeef");
+        public static DiscordColor purple = new DiscordColor("7349AC");
+        public static DiscordColor wished = new DiscordColor("00FF00");
 
+        public static int waifuCount = 5;
+
+        public static List<string> waifuIDList = new List<string>();
+
+        [Command("test")]
+        public async Task waifuTest(CommandContext ctx)
+        {
+            int waifuID = new Random().Next(1, waifuCount); //pick a random waifu
+
+            DiscordEmbed em = new DiscordEmbedBuilder
+            {
+                Title = "title",
+                Description = "description",
+                Color = blue,
+                Timestamp = DateTime.Now,
+                Author = new DiscordEmbedBuilder.EmbedAuthor { Name = "authorName" },
+                Footer = new DiscordEmbedBuilder.EmbedFooter { Text = "footer text" },
+            };
+
+            await ctx.RespondAsync(embed: em);
+        }
+
+        [Command("waifu"), Description("Spawns a waifu."), Aliases("w")]
+        public async Task waifuRoll(CommandContext ctx)
+        {
+            waifuIDList.Add("1");
+            waifuIDList.Add("152");
+            waifuIDList.Add("294");
+            waifuIDList.Add("592");
+
+            await ctx.RespondAsync(waifuIDList.Count.ToString());
+
+            int randomInt = new Random().Next(0, waifuIDList.Count);
+
+            DiscordEmbed em = new DiscordEmbedBuilder
+            {
+                Author = new DiscordEmbedBuilder.EmbedAuthor { Name = $"RInt: {randomInt}, waifuID: {waifuIDList[randomInt]}" },
+                Description = "AnimeName",
+                Color = purple
+            };
+
+            await ctx.RespondAsync(embed: em);
+            waifuIDList.Clear();
+        }
+    }
+
+    class _2DWaifusWishlist : BaseCommandModule
+    {
+        [Command("wishlist"), Description("Shows your wishlist"), Aliases("wl")]
+        public async Task wishListTask(CommandContext ctx)
+        {
+
+        }
     }
 }

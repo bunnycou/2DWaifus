@@ -101,7 +101,7 @@ namespace _2DWaifus
 
                 AutoReconnect = true,
                 LogLevel = LogLevel.Info,
-                UseInternalLogHandler = false
+                UseInternalLogHandler = true
             };
 
             this.bot = new DiscordClient(config);
@@ -124,6 +124,8 @@ namespace _2DWaifus
             this.Commands.CommandErrored += this.commandsError;
 
             this.Commands.RegisterCommands<_2DWaifusCommands>();
+            this.Commands.RegisterCommands<_2DWaifusRolls>();
+            //this.Commands.RegisterCommands<_2DWaifusWishlist>();
 
             await this.bot.ConnectAsync();
 
