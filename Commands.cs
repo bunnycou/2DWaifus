@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.IO;
 using System.Linq;
 using System.Collections.Generic;
+using MySql.Data.MySqlClient;
 
 namespace _2DWaifus
 {
@@ -37,18 +38,33 @@ namespace _2DWaifus
         public static List<string> waifuIDList = new List<string>();
 
         [Command("test")]
-        public async Task waifuTest(CommandContext ctx)
+        public async Task test(CommandContext ctx)
         {
-            int waifuID = new Random().Next(1, waifuCount); //pick a random waifu
-
+            MySqlConnection conn = new MySqlConnection(@"server=play.explosionfish.net;database=test;uid=cear;pwd=verygoodpass;");
+            conn.Open();
+            Console.WriteLine($"[{DateTime.Now}][2DWaifus] Connected to database");
+            MySqlCommand cmd = new MySqlCommand("SELECT * FROM `users` ORDER BY `username` LIMIT 50");
+            MySqlCommand cmd2 = new MySqlCommand("SELECT * FROM `users` ORDER BY `password` LIMIT 50");
+            string uname;
+            string pword;
+            using (conn)
+            using (var reader = cmd.ExecuteReader())
+            {
+                reader.Read();
+                uname = reader.GetString(0);
+            }
+            using (conn)
+            using (var reader = cmd2.ExecuteReader())
+            {
+                reader.Read();
+                pword = reader.GetString(0);
+            }
+            conn.Close();
             DiscordEmbed em = new DiscordEmbedBuilder
             {
-                Title = "title",
-                Description = "description",
-                Color = blue,
-                Timestamp = DateTime.Now,
-                Author = new DiscordEmbedBuilder.EmbedAuthor { Name = "authorName" },
-                Footer = new DiscordEmbedBuilder.EmbedFooter { Text = "footer text" },
+                Title = uname,
+                Description = pword,
+                Color = blue
             };
 
             await ctx.RespondAsync(embed: em);
