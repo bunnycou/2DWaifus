@@ -42,23 +42,17 @@ namespace _2DWaifus
         {
             MySqlConnection conn = new MySqlConnection(@"server=play.explosionfish.net;database=test;uid=cear;pwd=verygoodpass;");
             conn.Open();
-            Console.WriteLine($"[{DateTime.Now}][2DWaifus] Connected to database");
-            MySqlCommand cmd = new MySqlCommand("SELECT * FROM `users` ORDER BY `username` LIMIT 50");
-            MySqlCommand cmd2 = new MySqlCommand("SELECT * FROM `users` ORDER BY `password` LIMIT 50");
-            string uname;
-            string pword;
-            using (conn)
-            using (var reader = cmd.ExecuteReader())
+            string input = "admin";
+            MySqlCommand cmd = new MySqlCommand($"SELECT * FROM users WHERE username = '{input}'", conn);
+            string uname = string.Empty;
+            string pword = string.Empty;
+            MySqlDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
             {
-                reader.Read();
-                uname = reader.GetString(0);
+                uname = $"{reader.GetString(0)}";
+                pword = $"{reader.GetString(1)}";
             }
-            using (conn)
-            using (var reader = cmd2.ExecuteReader())
-            {
-                reader.Read();
-                pword = reader.GetString(0);
-            }
+            reader.Close();
             conn.Close();
             DiscordEmbed em = new DiscordEmbedBuilder
             {
@@ -94,10 +88,16 @@ namespace _2DWaifus
         }
     }
 
-    class _2DWaifusWishlist : BaseCommandModule
+    class _2DWaifusBase : BaseCommandModule
     {
         [Command("wishlist"), Description("Shows your wishlist"), Aliases("wl")]
         public async Task wishListTask(CommandContext ctx)
+        {
+
+        }
+
+        [Command("info"), Description("Shows info about a waifu"), Aliases("i")]
+        public async Task infoTask(CommandContext ctx, string[] waifuName)
         {
 
         }
