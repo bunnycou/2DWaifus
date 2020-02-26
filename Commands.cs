@@ -83,32 +83,28 @@ namespace _2DWaifus
             string name = "";
             string anime = "";
             //bool owned = false;
-            ulong ownerID = 0;
+            string ownerID = "this should never happen";
             MySqlDataReader reader = cmd.ExecuteReader();
             while(reader.Read())
             {
                 name = $"{reader.GetString(1)}";
                 anime = $"{reader.GetString(2)}";
-                if (reader.GetString(3).Equals("1")) {
-                    //owned = true;
-                    ownerID = Convert.ToUInt64(reader.GetString(4));
-                } else { }
+                ownerID = reader.GetString(4);
             }
             reader.Close();
             conn.Close();
-            DiscordMember owner = await ctx.Guild.GetMemberAsync(ownerID);
+            DiscordMember owner = ctx.Guild.GetMemberAsync(Convert.ToUInt64(ownerID)).Result;
             DiscordEmbedBuilder.EmbedFooter footer = new DiscordEmbedBuilder.EmbedFooter
             {
                 IconUrl = owner.AvatarUrl,
                 Text = $"Owned by {owner.DisplayName}"
             };
 
-            string imageName = Regex.Replace(name, @"\s+", string.Empty).ToLower();
             DiscordEmbed em = new DiscordEmbedBuilder
             {
                 Title = name,
                 Description = anime,
-                ImageUrl = $"https://raw.githubusercontent.com/noahcou/2DWaifusImages/master/images/{imageName}1.png",
+                ImageUrl = $"https://raw.githubusercontent.com/noahcou/2DWaifusImages/master/images/{Regex.Replace(name, @"\s+", string.Empty).ToLower()}1.png",
                 Color = purple,
                 Footer = footer,
             };
