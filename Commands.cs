@@ -38,7 +38,7 @@ namespace _2DWaifus
         public static int waifuCount = 5;
 
         public static List<string> waifuIDList = new List<string>();
-        public static DiscordMember testMember { get; set; }
+        public static DiscordMember ownerMember { get; set; }
 
         [Command("test")]
         public async Task test(CommandContext ctx)
@@ -75,29 +75,37 @@ namespace _2DWaifus
             {
                 connectionJson = JsonConvert.DeserializeObject<JConnection>(r.ReadToEnd());
             }
-            string testID = "1";
-            //grab waifu from ID
-            MySqlConnection conn = new MySqlConnection(connectionJson.connection);
+            string testID = "1"; //testID will be changed with array of random later
+            MySqlConnection conn = new MySqlConnection(connectionJson.connection); //connect
             conn.Open();
-            MySqlCommand cmd = new MySqlCommand($"SELECT * FROM waifus WHERE id = '{testID}'", conn);
+            MySqlCommand cmd = new MySqlCommand($"SELECT * FROM waifus WHERE id = '{testID}'", conn); //get the stuff from the ID
+            //these are vars that are used later
             string name = "";
             string anime = "";
-            //bool owned = false;
-            string ownerID = "this should never happen";
+            bool owned = false;
+            //use the command
             MySqlDataReader reader = cmd.ExecuteReader();
             while(reader.Read())
             {
                 name = $"{reader.GetString(1)}";
                 anime = $"{reader.GetString(2)}";
-                ownerID = reader.GetString(4);
+                if (reader.GetInt16(3).Equals(1)) //if owned
+                {
+                    owned = true;
+                    ownerMember = ctx.Guild.GetMemberAsync(Convert.ToUInt64(reader.GetString(4))).Result;
+                } else {
+                    ownerMember = ctx.Member;
+                    owned = false; 
+                }
+                
             }
             reader.Close();
             conn.Close();
-            DiscordMember owner = ctx.Guild.GetMemberAsync(Convert.ToUInt64(ownerID)).Result;
+          
             DiscordEmbedBuilder.EmbedFooter footer = new DiscordEmbedBuilder.EmbedFooter
             {
-                IconUrl = owner.AvatarUrl,
-                Text = $"Owned by {owner.DisplayName}"
+                IconUrl = ownerMember.AvatarUrl,
+                Text = $"Owned by {ownerMember.DisplayName}"
             };
 
             DiscordEmbed em = new DiscordEmbedBuilder
@@ -105,8 +113,8 @@ namespace _2DWaifus
                 Title = name,
                 Description = anime,
                 ImageUrl = $"https://raw.githubusercontent.com/noahcou/2DWaifusImages/master/images/{Regex.Replace(name, @"\s+", string.Empty).ToLower()}1.png",
-                Color = purple,
-                Footer = footer,
+                Color = owned ? purple : blue,
+                Footer = owned ? footer : new DiscordEmbedBuilder.EmbedFooter(),
             };
 
             await ctx.RespondAsync(embed: em);
