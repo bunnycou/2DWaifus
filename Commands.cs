@@ -40,43 +40,27 @@ namespace _2DWaifus
         public static List<string> waifuIDList = new List<string>();
         public static DiscordMember ownerMember { get; set; }
 
-        [Command("test")]
-        public async Task test(CommandContext ctx)
+        [Command("listall")]
+        public async Task all(CommandContext ctx)
         {
-            MySqlConnection conn = new MySqlConnection(@"server=play.explosionfish.net;database=test;uid=cear;pwd=verygoodpass;");
-            conn.Open();
-            string input = "admin";
-            MySqlCommand cmd = new MySqlCommand($"SELECT * FROM users WHERE username = '{input}'", conn);
-            string uname = string.Empty;
-            string pword = string.Empty;
-            MySqlDataReader reader = cmd.ExecuteReader();
-            while (reader.Read())
-            {
-                uname = $"{reader.GetString(0)}";
-                pword = $"{reader.GetString(1)}";
-            }
-            reader.Close();
-            conn.Close();
-            DiscordEmbed em = new DiscordEmbedBuilder
-            {
-                Title = uname,
-                Description = pword,
-                Color = blue
-            };
+            string messageToSend = "";
+            Program.allList.ForEach(x => messageToSend += $"{x}\n");
+            await ctx.RespondAsync(messageToSend);
+        }
 
-            await ctx.RespondAsync(embed: em);
+        [Command("listunowned")]
+        public async Task owned(CommandContext ctx)
+        {
+            string messageToSend = "";
+            Program.unownedList.ForEach(x => messageToSend += $"{x}\n");
+            await ctx.RespondAsync(messageToSend);
         }
 
         [Command("waifu"), Description("Spawns a waifu."), Aliases("w")]
         public async Task waifuRoll(CommandContext ctx)
         {
-            JConnection connectionJson;
-            using (StreamReader r = new StreamReader("connection.json"))
-            {
-                connectionJson = JsonConvert.DeserializeObject<JConnection>(r.ReadToEnd());
-            }
             string testID = "1"; //testID will be changed with array of random later
-            MySqlConnection conn = new MySqlConnection(connectionJson.connection); //connect
+            MySqlConnection conn = new MySqlConnection(Program.connectionJson.connection); //connect
             conn.Open();
             MySqlCommand cmd = new MySqlCommand($"SELECT * FROM waifus WHERE id = '{testID}'", conn); //get the stuff from the ID
             //these are vars that are used later

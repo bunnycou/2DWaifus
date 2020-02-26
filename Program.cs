@@ -7,20 +7,70 @@ using Newtonsoft.Json;
 using System;
 using System.IO;
 using System.Threading.Tasks;
+using System.Threading;
+using System.Collections.Generic;
+using MySql.Data.MySqlClient;
 
 namespace _2DWaifus
 {
     class Program
     {
+        public static JConnection connectionJson;
+        public static JToken tokenJson;
+        public static JConf confJson;
         public DiscordClient bot;
+        public static List<string> unownedList = new List<string>();
+        public static List<string> allList = new List<string>();
+
         public CommandsNextExtension Commands { get; set; }
+        public static MySqlConnection connection { get; set; }
 
         public static Program instance = new Program();
         static void Main(string[] args)
         {
+            initVars();
+            Thread bgThread = new Thread(new ParameterizedThreadStart(bgThreadVoid)) { IsBackground = true };
+            bgThread.Start();
+            Console.WriteLine("[2DWaifus][Thread] Background thread started.");
             instance.startBotAsync().GetAwaiter().GetResult();
         }
 
+        internal static void bgThreadVoid(object info)
+        {
+            connection.Open();
+            MySqlCommand allCmd = new MySqlCommand("SELECT * FROM waifus", connection);
+            MySqlDataReader allReader = allCmd.ExecuteReader();
+            while (allReader.Read())
+            {
+                allList.Add(allReader.GetString(1));
+            }
+            allReader.Close();
+            MySqlCommand unownedCommand = new MySqlCommand("SELECT * FROM waifus WHERE owned = '0'", connection);
+            MySqlDataReader unownedReader = unownedCommand.ExecuteReader();
+            while (unownedReader.Read())
+            {
+                unownedList.Add(unownedReader.GetInt16(0).ToString()); // IDs
+            }
+            unownedReader.Close();
+            connection.Close();
+            Console.WriteLine("[2DWaifus][Thread] Background thread has completed.");
+        }
+        internal static void initVars()
+        {
+            using (StreamReader r = new StreamReader("connection.json"))
+            {
+                connectionJson = JsonConvert.DeserializeObject<JConnection>(r.ReadToEnd());
+            }
+            using (StreamReader r = new StreamReader("config.json"))
+            {
+                confJson = JsonConvert.DeserializeObject<JConf>(r.ReadToEnd());
+            }
+            using (StreamReader r = new StreamReader("token.json"))
+            {
+                tokenJson = JsonConvert.DeserializeObject<JToken>(r.ReadToEnd());
+            }
+            connection = new MySqlConnection(connectionJson.connection);
+        }
         private Task botReady(ReadyEventArgs e)
         {
             e.Client.DebugLogger.LogMessage(LogLevel.Info, "2DWaifus", "Bot is ready", DateTime.Now);
@@ -81,22 +131,9 @@ namespace _2DWaifus
         public async Task startBotAsync()
         {
             //load the JASOOON!
-            JConf cjason;
-            JToken tjason;
-            JConnection connectionJson;
-            using (StreamReader r = new StreamReader("config.json"))
-            {
-                var json = r.ReadToEnd();
-                cjason = JsonConvert.DeserializeObject<JConf>(json);
-            }
-            using (StreamReader r = new StreamReader("token.json"))
-            {
-                var json = r.ReadToEnd();
-                tjason = JsonConvert.DeserializeObject<JToken>(json);
-            }
             var config = new DiscordConfiguration
             {
-                Token = tjason.token,
+                Token = tokenJson.token,
                 TokenType = TokenType.Bot,
 
                 AutoReconnect = true,
@@ -113,7 +150,7 @@ namespace _2DWaifus
 
             var commandConfig = new CommandsNextConfiguration
             {
-                StringPrefixes = new[] { cjason.prefix },
+                StringPrefixes = new[] { confJson.prefix },
 
                 EnableMentionPrefix = true
             };
@@ -133,6 +170,7 @@ namespace _2DWaifus
             await Task.Delay(-1);
         }
     }
+
     class JConf
     {
         public string prefix = "";
