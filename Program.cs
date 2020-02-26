@@ -83,6 +83,7 @@ namespace _2DWaifus
             //load the JASOOON!
             JConf cjason;
             JToken tjason;
+            JConnection connectionJson;
             using (StreamReader r = new StreamReader("config.json"))
             {
                 var json = r.ReadToEnd();
@@ -93,7 +94,6 @@ namespace _2DWaifus
                 var json = r.ReadToEnd();
                 tjason = JsonConvert.DeserializeObject<JToken>(json);
             }
-
             var config = new DiscordConfiguration
             {
                 Token = tjason.token,
@@ -140,5 +140,9 @@ namespace _2DWaifus
     class JToken
     {
         public string token = "";
+    }
+    class JConnection
+    {
+        public string connection = "";
     }
 }
