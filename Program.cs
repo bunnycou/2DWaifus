@@ -3,32 +3,22 @@ using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Exceptions;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
-using Newtonsoft.Json;
 using System;
-using System.IO;
 using System.Threading.Tasks;
 using System.Threading;
-using System.Collections.Generic;
 using MySql.Data.MySqlClient;
 
 namespace _2DWaifus
 {
     class Program
     {
-        public static JConnection connectionJson;
-        public static JToken tokenJson;
-        public static JConf confJson;
         public DiscordClient bot;
-        public static List<string> unownedList = new List<string>();
-        public static List<string> allList = new List<string>();
-
         public CommandsNextExtension Commands { get; set; }
-        public static MySqlConnection connection { get; set; }
 
         public static Program instance = new Program();
         static void Main(string[] args)
         {
-            initVars();
+            GlobalVars.initVars();
             Thread bgThread = new Thread(new ParameterizedThreadStart(bgThreadVoid)) { IsBackground = true };
             bgThread.Start();
             Console.WriteLine("[2DWaifus][Thread] Background thread started.");
@@ -37,40 +27,24 @@ namespace _2DWaifus
 
         internal static void bgThreadVoid(object info)
         {
-            connection.Open();
-            MySqlCommand allCmd = new MySqlCommand("SELECT * FROM waifus", connection);
+            GlobalVars.connection.Open();
+            MySqlCommand allCmd = new MySqlCommand("SELECT * FROM waifus", GlobalVars.connection);
             MySqlDataReader allReader = allCmd.ExecuteReader();
             while (allReader.Read())
             {
-                allList.Add(allReader.GetString(1));
+                GlobalVars.allList.Add(allReader.GetString(1));
             }
             allReader.Close();
-            MySqlCommand unownedCommand = new MySqlCommand("SELECT * FROM waifus WHERE owned = '0'", connection);
+            MySqlCommand unownedCommand = new MySqlCommand("SELECT * FROM waifus WHERE owned = '0'", GlobalVars.connection);
             MySqlDataReader unownedReader = unownedCommand.ExecuteReader();
             while (unownedReader.Read())
             {
-                unownedList.Add(unownedReader.GetInt16(0).ToString()); // IDs
+                GlobalVars.unownedList.Add(unownedReader.GetInt16(0).ToString()); // IDs
             }
             unownedReader.Close();
-            connection.Close();
+            GlobalVars.connection.Close();
             Console.WriteLine("[2DWaifus][Thread] Background thread has completed.");
-        }
-        internal static void initVars()
-        {
-            using (StreamReader r = new StreamReader("connection.json"))
-            {
-                connectionJson = JsonConvert.DeserializeObject<JConnection>(r.ReadToEnd());
-            }
-            using (StreamReader r = new StreamReader("config.json"))
-            {
-                confJson = JsonConvert.DeserializeObject<JConf>(r.ReadToEnd());
-            }
-            using (StreamReader r = new StreamReader("token.json"))
-            {
-                tokenJson = JsonConvert.DeserializeObject<JToken>(r.ReadToEnd());
-            }
-            connection = new MySqlConnection(connectionJson.connection);
-        }
+        }       
         private Task botReady(ReadyEventArgs e)
         {
             e.Client.DebugLogger.LogMessage(LogLevel.Info, "2DWaifus", "Bot is ready", DateTime.Now);
@@ -133,7 +107,7 @@ namespace _2DWaifus
             //load the JASOOON!
             var config = new DiscordConfiguration
             {
-                Token = tokenJson.token,
+                Token = GlobalVars.tokenJson.token,
                 TokenType = TokenType.Bot,
 
                 AutoReconnect = true,
@@ -150,7 +124,7 @@ namespace _2DWaifus
 
             var commandConfig = new CommandsNextConfiguration
             {
-                StringPrefixes = new[] { confJson.prefix },
+                StringPrefixes = new[] { GlobalVars.confJson.prefix },
 
                 EnableMentionPrefix = true
             };
@@ -162,7 +136,7 @@ namespace _2DWaifus
 
             this.Commands.RegisterCommands<_2DWaifusCommands>();
             this.Commands.RegisterCommands<_2DWaifusRolls>();
-            //this.Commands.RegisterCommands<_2DWaifusWishlist>();
+            this.Commands.RegisterCommands<_2DWaifusBase>();
 
             await this.bot.ConnectAsync();
 
