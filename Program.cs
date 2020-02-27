@@ -134,7 +134,7 @@ namespace _2DWaifus
             this.Commands.CommandExecuted += this.commandsExecuted;
             this.Commands.CommandErrored += this.commandsError;
 
-            this.Commands.RegisterCommands<_2DWaifusCommands>();
+            this.Commands.RegisterCommands<_2DWaifusAdmin>();
             this.Commands.RegisterCommands<_2DWaifusRolls>();
             this.Commands.RegisterCommands<_2DWaifusBase>();
 

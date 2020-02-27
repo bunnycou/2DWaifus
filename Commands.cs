@@ -11,20 +11,12 @@ using System.Text.RegularExpressions;
 namespace _2DWaifus
 {
 
-    class _2DWaifusCommands : BaseCommandModule
+    class _2DWaifusAdmin : BaseCommandModule
     {
-        [Command("ping")] // let's define this method as a command
-        [Description("Example ping command")] // this will be displayed to tell users what this command does when they invoke help
-        [Aliases("pong")] // alternative names for the command
-        public async Task Ping(CommandContext ctx) // this command takes no arguments
+        [Command("reset"), Description("Resets the targets harem")]
+        public async Task resetAsync(CommandContext ctx)
         {
-            //trigger a typing indicator to let users know 
-            await ctx.TriggerTypingAsync();
 
-            var emoji = DiscordEmoji.FromName(ctx.Client, ":ping_pong:");
-
-            // respond with ping
-            await ctx.RespondAsync($"{emoji} Pong! Ping: {ctx.Client.Ping}ms");
         }
     }
 
@@ -56,7 +48,7 @@ namespace _2DWaifus
         [Command("waifu"), Description("Spawns a waifu."), Aliases("w")]
         public async Task waifuRoll(CommandContext ctx)
         {
-            string rollID = new Random().Next(0, GlobalVars.unownedList.Count).ToString();
+            string rollID = GlobalVars.unownedList[new Random().Next(0, GlobalVars.unownedList.Count)];
             MySqlConnection conn = new MySqlConnection(GlobalVars.connectionJson.connection); //connect
             conn.Open();
             MySqlCommand cmd = new MySqlCommand($"SELECT * FROM waifus WHERE id = '{rollID}'", conn); //get the stuff from the ID
@@ -77,7 +69,7 @@ namespace _2DWaifus
             {
                 Title = name,
                 Description = anime,
-                ImageUrl = $"https://raw.githubusercontent.com/noahcou/2DWaifusImages/master/images/{Regex.Replace(name, @"\s+", string.Empty).ToLower()}1.png",
+                ImageUrl = $"https://raw.githubusercontent.com/noahcou/2DWaifusImages/master/images/{Regex.Replace(name, @"\s+", string.Empty).ToLower()}/{Regex.Replace(name, @"\s+", string.Empty).ToLower()}1.png",
                 Color = GlobalVars.unclaimed
             };
 
@@ -148,6 +140,12 @@ namespace _2DWaifus
 
         [Command("list"), Description("Shows your owned waifus"), Aliases("l")]
         public async Task listTask(CommandContext ctx)
+        {
+
+        }
+
+        [Command("divorce"), Description("Divorces a specified waifu"), Aliases("d")]
+        public async Task divorceTask(CommandContext ctx, params string[] waifu)
         {
 
         }
