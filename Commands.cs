@@ -7,6 +7,8 @@ using System.Linq;
 using System.Collections.Generic;
 using MySql.Data.MySqlClient;
 using System.Text.RegularExpressions;
+using DSharpPlus.Interactivity;
+using System.Threading;
 
 namespace _2DWaifus
 {
@@ -22,13 +24,6 @@ namespace _2DWaifus
 
     class _2DWaifusRolls : BaseCommandModule
     {
-
-
-        public static int waifuCount = 5;
-
-        public static List<string> waifuIDList = new List<string>();
-        
-
         [Command("listall")]
         public async Task all(CommandContext ctx)
         {
@@ -48,6 +43,8 @@ namespace _2DWaifus
         [Command("waifu"), Description("Spawns a waifu."), Aliases("w")]
         public async Task waifuRoll(CommandContext ctx)
         {
+            var interactivity = ctx.Client.GetInteractivity();
+            DiscordEmoji heart = DiscordEmoji.FromName(Program.instance.bot, ":heart:");
             string rollID = GlobalVars.unownedList[new Random().Next(0, GlobalVars.unownedList.Count)];
             MySqlConnection conn = new MySqlConnection(GlobalVars.connectionJson.connection); //connect
             conn.Open();
@@ -57,13 +54,13 @@ namespace _2DWaifus
             string anime = "";
             //use the command
             MySqlDataReader reader = cmd.ExecuteReader();
-            while(reader.Read())
+            while (reader.Read())
             {
                 name = $"{reader.GetString(1)}";
-                anime = $"{reader.GetString(2)}";               
+                anime = $"{reader.GetString(2)}";
             }
             reader.Close();
-            conn.Close();     
+            conn.Close();
 
             DiscordEmbed em = new DiscordEmbedBuilder
             {
@@ -73,7 +70,13 @@ namespace _2DWaifus
                 Color = GlobalVars.unclaimed
             };
 
-            await ctx.RespondAsync(embed: em);
+            DiscordMessage msg = await ctx.RespondAsync(embed: em);
+            await msg.CreateReactionAsync(heart);
+            var result = await interactivity.WaitForReactionAsync(x => x.Emoji.Equals(heart) && !x.User.IsBot, msg, ctx.User, TimeSpan.FromSeconds(30));
+            if (!result.TimedOut)
+            {
+                await ctx.RespondAsync($":sparkling_heart: {name} and {ctx.User.Username} are now married :sparkling_heart:");         
+            }
         }
     }
 

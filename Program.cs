@@ -1,6 +1,7 @@
 ﻿using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Exceptions;
+using DSharpPlus.Interactivity;
 using DSharpPlus.Entities;
 using DSharpPlus.EventArgs;
 using System;
@@ -14,6 +15,7 @@ namespace _2DWaifus
     {
         public DiscordClient bot;
         public CommandsNextExtension Commands { get; set; }
+        public InteractivityExtension Interactivity { get; set; }
 
         public static Program instance = new Program();
         static void Main(string[] args)
@@ -137,6 +139,10 @@ namespace _2DWaifus
             this.Commands.RegisterCommands<_2DWaifusAdmin>();
             this.Commands.RegisterCommands<_2DWaifusRolls>();
             this.Commands.RegisterCommands<_2DWaifusBase>();
+
+            var interactiveConfig = new InteractivityConfiguration {};
+
+            Interactivity = this.bot.UseInteractivity(interactiveConfig);
 
             await this.bot.ConnectAsync();
 
