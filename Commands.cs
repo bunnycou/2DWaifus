@@ -213,9 +213,80 @@ namespace _2DWaifus
         }
 
         [Command("divorce"), Description("Divorces a specified waifu"), Aliases("d")]
-        public async Task divorceTask(CommandContext ctx, params string[] waifu)
+        public async Task divorceTask(CommandContext ctx, params string[] waifuName)
         {
+            var interactivity = ctx.Client.GetInteractivity();
+            DiscordEmoji confirm = DiscordEmoji.FromName(Program.instance.bot, ":white_check_mark:");
+            DiscordEmoji deny = DiscordEmoji.FromName(Program.instance.bot, ":no_entry_sign:");
 
+            string name = Regex.Replace(String.Join(" ", waifuName).ToLower(), @"(^\w)|(\s\w)", x => x.Value.ToUpper());
+            string waifuid = "";
+            bool owned = false;
+            string owner = ctx.Member.Id.ToString();
+            Console.WriteLine(name);
+            Console.WriteLine(owner);
+
+            GlobalVars.connection.Open();
+            MySqlCommand divorceinfo = new MySqlCommand($"select * from waifus where name = '{name}'", GlobalVars.connection);
+            MySqlDataReader dinforead = divorceinfo.ExecuteReader();
+            while (dinforead.Read())
+            {
+                waifuid = dinforead.GetString(0);
+                if (dinforead.GetString(3) == "True" && dinforead.GetString(4) == owner)
+                {
+                    owned = true;
+                } else
+                {
+                    owned = false;
+                }
+            }
+            dinforead.Close();
+            GlobalVars.connection.Close();
+
+            if (owned)
+            {
+                DiscordMessage confirmation = await ctx.RespondAsync($"Are you sure you want to divorce {name}?");
+                await confirmation.CreateReactionAsync(confirm);
+                await confirmation.CreateReactionAsync(deny);
+            } else
+            {
+                await ctx.RespondAsync("You do not own that waifu!");
+            }
+
+
+            /*//mysql for removing from thing
+            GlobalVars.connection.Open();
+            MySqlCommand waifulist = new MySqlCommand($"SELECT waifus FROM users WHERE id = '{owner}'", GlobalVars.connection);
+            MySqlDataReader waifulistreader = waifulist.ExecuteReader();
+            while (waifulistreader.Read())
+            {
+                string ownerWaifus = waifulistreader.GetString(0);
+                GlobalVars.ownerWaifuList = JsonConvert.DeserializeObject<GlobalVars.Owaifulist>(ownerWaifus);
+            }
+            waifulistreader.Close();
+            GlobalVars.connection.Close();
+
+            string divorcedHarem = "{\"waifus\": [";
+            foreach (string w in GlobalVars.ownerWaifuList.waifus)
+            {
+                if (w != waifuid)
+                {
+                    divorcedHarem += $"\"{w}\"";
+                }
+            }
+            divorcedHarem.Remove(divorcedHarem.Length - 1);
+            divorcedHarem += "]}";
+
+            GlobalVars.connection.Open();
+            MySqlCommand updatelist = new MySqlCommand($"update users set waifus = '{divorcedHarem}' where id = '{owner}'");
+            MySqlDataReader uplistread = updatelist.ExecuteReader();
+            while(uplistread.Read())
+            {
+            }
+            uplistread.Close();
+            GlobalVars.connection.Close();
+
+            await ctx.RespondAsync($"You have divorce {name}");*/
         }
     }
 }
