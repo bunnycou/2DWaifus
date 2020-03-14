@@ -145,10 +145,11 @@ namespace _2DWaifus
         [Command("list"), Description("Shows your owned waifus"), Aliases("l")]
         public async Task listTask(CommandContext ctx)
         {
-            string owner = ctx.Member.Id.ToString();
+            string owner = ctx.Member.DisplayName;
+            string ownerid = ctx.Member.Id.ToString();
 
             GlobalVars.connection.Open();
-            MySqlCommand cmd = new MySqlCommand($"SELECT waifus FROM users WHERE id = '{owner}'", GlobalVars.connection);
+            MySqlCommand cmd = new MySqlCommand($"SELECT waifus FROM users WHERE id = '{ownerid}'", GlobalVars.connection);
             MySqlDataReader reader = cmd.ExecuteReader();
             while (reader.Read())
             {
@@ -158,10 +159,30 @@ namespace _2DWaifus
             reader.Close();
             GlobalVars.connection.Close();
 
+            string waifulist = "";
             foreach (string w in GlobalVars.ownerWaifuList.waifus)
             {
-
+                string waifuname = "";
+                GlobalVars.connection.Open();
+                MySqlCommand namecmd = new MySqlCommand($"select name from waifus where id = {w}", GlobalVars.connection);
+                MySqlDataReader namereader = namecmd.ExecuteReader();
+                while (namereader.Read())
+                {
+                    waifuname = namereader.GetString(0);
+                }
+                namereader.Close();
+                GlobalVars.connection.Close();
+                waifulist += $"{waifuname}\n";
             }
+
+            DiscordEmbedBuilder em = new DiscordEmbedBuilder
+            {
+                Title = $"{owner}'s Waifus",
+                Description = waifulist,
+                Color = GlobalVars.list
+            };
+
+            await ctx.RespondAsync(embed: em);
         }
 
         [Command("divorce"), Description("Divorces a specified waifu"), Aliases("d")]

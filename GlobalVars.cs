@@ -12,6 +12,7 @@ namespace _2DWaifus
         public static DiscordColor unclaimed = new DiscordColor("00aeef");
         public static DiscordColor claimed = new DiscordColor("7349AC");
         public static DiscordColor wished = new DiscordColor("00FF00");
+        public static DiscordColor list = new DiscordColor("00ffaa");
         public static JSecret secretJson;
         public static JConf confJson;
         public static Owaifulist ownerWaifuList;
