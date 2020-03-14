@@ -109,7 +109,7 @@ namespace _2DWaifus
             //load the JASOOON!
             var config = new DiscordConfiguration
             {
-                Token = GlobalVars.tokenJson.token,
+                Token = GlobalVars.secretJson.token,
                 TokenType = TokenType.Bot,
 
                 AutoReconnect = true,
@@ -149,18 +149,5 @@ namespace _2DWaifus
             //prevent bot from stopping
             await Task.Delay(-1);
         }
-    }
-
-    class JConf
-    {
-        public string prefix = "";
-    }
-    class JToken
-    {
-        public string token = "";
-    }
-    class JConnection
-    {
-        public string connection = "";
     }
 }

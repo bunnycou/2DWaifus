@@ -12,28 +12,38 @@ namespace _2DWaifus
         public static DiscordColor unclaimed = new DiscordColor("00aeef");
         public static DiscordColor claimed = new DiscordColor("7349AC");
         public static DiscordColor wished = new DiscordColor("00FF00");
-        public static JConnection connectionJson;
-        public static JToken tokenJson;
+        public static JSecret secretJson;
         public static JConf confJson;
+        public static Owaifulist ownerWaifuList;
         public static List<string> unownedList = new List<string>();
         public static List<string> allList = new List<string>();
         public static MySqlConnection connection { get; set; }
 
         internal static void initVars()
         {
-            using (StreamReader r = new StreamReader("connection.json"))
-            {
-                connectionJson = JsonConvert.DeserializeObject<JConnection>(r.ReadToEnd());
-            }
             using (StreamReader r = new StreamReader("config.json"))
             {
                 confJson = JsonConvert.DeserializeObject<JConf>(r.ReadToEnd());
             }
-            using (StreamReader r = new StreamReader("token.json"))
+            using (StreamReader r = new StreamReader("secret.json"))
             {
-                tokenJson = JsonConvert.DeserializeObject<JToken>(r.ReadToEnd());
+                secretJson = JsonConvert.DeserializeObject<JSecret>(r.ReadToEnd());
             }
-            connection = new MySqlConnection(connectionJson.connection);
+            connection = new MySqlConnection(secretJson.connection);
+        }
+
+        public class JConf
+        {
+            public string prefix = "";
+        }
+        public class JSecret
+        {
+            public string token = "";
+            public string connection = "";
+        }
+        public class Owaifulist
+        {
+            public string[] waifus = new string[] { "" };
         }
     }
 }

@@ -9,6 +9,7 @@ using MySql.Data.MySqlClient;
 using System.Text.RegularExpressions;
 using DSharpPlus.Interactivity;
 using System.Threading;
+using Newtonsoft.Json;
 
 namespace _2DWaifus
 {
@@ -46,7 +47,7 @@ namespace _2DWaifus
             var interactivity = ctx.Client.GetInteractivity();
             DiscordEmoji heart = DiscordEmoji.FromName(Program.instance.bot, ":heart:");
             string rollID = GlobalVars.unownedList[new Random().Next(0, GlobalVars.unownedList.Count)];
-            MySqlConnection conn = new MySqlConnection(GlobalVars.connectionJson.connection); //connect
+            MySqlConnection conn = new MySqlConnection(GlobalVars.secretJson.connection); //connect
             conn.Open();
             MySqlCommand cmd = new MySqlCommand($"SELECT * FROM waifus WHERE id = '{rollID}'", conn); //get the stuff from the ID
             //these are vars that are used later
@@ -144,7 +145,23 @@ namespace _2DWaifus
         [Command("list"), Description("Shows your owned waifus"), Aliases("l")]
         public async Task listTask(CommandContext ctx)
         {
+            string owner = ctx.Member.Id.ToString();
 
+            GlobalVars.connection.Open();
+            MySqlCommand cmd = new MySqlCommand($"SELECT waifus FROM users WHERE id = '{owner}'", GlobalVars.connection);
+            MySqlDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                string ownerWaifus = reader.GetString(0);
+                GlobalVars.ownerWaifuList = JsonConvert.DeserializeObject<GlobalVars.Owaifulist>(ownerWaifus);
+            }
+            reader.Close();
+            GlobalVars.connection.Close();
+
+            foreach (string w in GlobalVars.ownerWaifuList.waifus)
+            {
+
+            }
         }
 
         [Command("divorce"), Description("Divorces a specified waifu"), Aliases("d")]
