@@ -76,6 +76,33 @@ namespace _2DWaifus
             var result = await interactivity.WaitForReactionAsync(x => x.Emoji.Equals(heart) && !x.User.IsBot, msg, ctx.User, TimeSpan.FromSeconds(30));
             if (!result.TimedOut)
             {
+                string ownerid = ctx.Member.Id.ToString();
+                GlobalVars.connection.Open();
+                MySqlCommand haremcmd = new MySqlCommand($"SELECT waifus FROM users WHERE id = '{ownerid}'", GlobalVars.connection);
+                MySqlDataReader haremreader = haremcmd.ExecuteReader();
+                while (haremreader.Read())
+                {
+                    string ownerWaifus = haremreader.GetString(0);
+                    GlobalVars.ownerWaifuList = JsonConvert.DeserializeObject<GlobalVars.Owaifulist>(ownerWaifus);
+                }
+                haremreader.Close();
+                GlobalVars.connection.Close();
+
+                string newHarem = $"{{\"waifus\": [\"{rollID}\"";
+                foreach (string w in GlobalVars.ownerWaifuList.waifus)
+                {
+                    newHarem += $",\"{w}\"";
+                }
+                newHarem += "]}";
+                GlobalVars.connection.Open();
+                MySqlCommand updatecmd = new MySqlCommand($"update users set waifus = '{newHarem}' where id = '{ownerid}'", GlobalVars.connection);
+                MySqlDataReader updatereader = updatecmd.ExecuteReader();
+                while (updatereader.Read())
+                {
+                }
+                updatereader.Close();
+                GlobalVars.connection.Close();
+
                 await ctx.RespondAsync($":sparkling_heart: {name} and {ctx.User.Username} are now married :sparkling_heart:");         
             }
         }
