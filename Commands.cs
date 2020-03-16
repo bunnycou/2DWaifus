@@ -83,13 +83,13 @@ namespace _2DWaifus
                 while (haremreader.Read())
                 {
                     string ownerWaifus = haremreader.GetString(0);
-                    GlobalVars.ownerWaifuList = JsonConvert.DeserializeObject<GlobalVars.Owaifulist>(ownerWaifus);
+                    GlobalVars.ownerInfo = JsonConvert.DeserializeObject<GlobalVars.Owaifulist>(ownerWaifus);
                 }
                 haremreader.Close();
                 GlobalVars.connection.Close();
 
                 string newHarem = $"{{\"waifus\": [\"{rollID}\"";
-                foreach (string w in GlobalVars.ownerWaifuList.waifus)
+                foreach (string w in GlobalVars.ownerInfo.waifus)
                 {
                     newHarem += $",\"{w}\"";
                 }
@@ -163,10 +163,113 @@ namespace _2DWaifus
             await ctx.RespondAsync(embed: em);
         }
 
+        [Command("wish"), Description("Wishes a character"), Aliases("wi")]
+        public async Task wishTask(CommandContext ctx, params string[] waifuName)
+        {
+            string name = Regex.Replace(String.Join(" ", waifuName).ToLower(), @"(^\w)|(\s\w)", x => x.Value.ToUpper());
+            string ownerid = ctx.Member.Id.ToString();
+            string waifuid = "";
+            bool waifuowned = false;
+            string waifuowner = "";
+
+            GlobalVars.connection.Open();
+            MySqlCommand waifuinfo = new MySqlCommand($"select * from waifus where name = '{name}'", GlobalVars.connection);
+            MySqlDataReader waifuinfoRead = waifuinfo.ExecuteReader();
+            while (waifuinfoRead.Read())
+            {
+                waifuid = waifuinfoRead.GetString(0);
+                waifuowned = waifuinfoRead.GetBoolean(3);
+                if (waifuowned)
+                {
+                    waifuowner = waifuinfoRead.GetString(4);
+                }
+            }
+            waifuinfoRead.Close();
+            GlobalVars.connection.Close();
+
+            GlobalVars.connection.Open();
+            MySqlCommand wishlistcmd = new MySqlCommand($"SELECT wishes FROM users WHERE id = '{ownerid}'", GlobalVars.connection);
+            MySqlDataReader wishlistreader = wishlistcmd.ExecuteReader();
+            while (wishlistreader.Read())
+            {
+                string ownerWishes = wishlistreader.GetString(0);
+                GlobalVars.ownerInfo = JsonConvert.DeserializeObject<GlobalVars.Owaifulist>(ownerWishes);
+            }
+            wishlistreader.Close();
+            GlobalVars.connection.Close();
+
+            string newwishlist = $"{{\"wishes\": [\"{waifuid}\"";
+            foreach (string wish in GlobalVars.ownerInfo.wishes)
+            {
+                newwishlist += $", \"{wish}\"";
+            }
+            newwishlist += "]}";
+
+            GlobalVars.connection.Open();
+            MySqlCommand wishlucmd = new MySqlCommand($"update users set wishes = '{newwishlist}' where id = '{ownerid}'", GlobalVars.connection);
+            MySqlDataReader wishluRead = wishlucmd.ExecuteReader();
+            while (wishluRead.Read())
+            {
+            }
+            wishlistreader.Close();
+            GlobalVars.connection.Close();
+
+            if (!waifuowned)
+            {
+                await ctx.RespondAsync($"{name} has been added to your wishlist! ");
+            } else
+            {
+                await ctx.RespondAsync($"{name} has been added to your wishlist! However, they are already owned by {waifuowner}");
+            }
+        }
+
+        [Command("wishremove"), Description("Removes waifu from wishlist"), Aliases("wr")]
+        public async Task wishRemoveTask(CommandContext ctx)
+        {
+
+        }
+
         [Command("wishlist"), Description("Shows your wishlist"), Aliases("wl")]
         public async Task wishListTask(CommandContext ctx)
         {
+            string owner = ctx.Member.DisplayName;
+            string ownerid = ctx.Member.Id.ToString();
 
+            GlobalVars.connection.Open();
+            MySqlCommand cmd = new MySqlCommand($"SELECT wishes FROM users WHERE id = '{ownerid}'", GlobalVars.connection);
+            MySqlDataReader reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                string ownerWaifus = reader.GetString(0);
+                GlobalVars.ownerInfo = JsonConvert.DeserializeObject<GlobalVars.Owaifulist>(ownerWaifus);
+            }
+            reader.Close();
+            GlobalVars.connection.Close();
+
+            string wishlist = "";
+            foreach (string w in GlobalVars.ownerInfo.waifus)
+            {
+                string waifuname = "";
+                GlobalVars.connection.Open();
+                MySqlCommand namecmd = new MySqlCommand($"select name from waifus where id = {w}", GlobalVars.connection);
+                MySqlDataReader namereader = namecmd.ExecuteReader();
+                while (namereader.Read())
+                {
+                    waifuname = namereader.GetString(0);
+                }
+                namereader.Close();
+                GlobalVars.connection.Close();
+                wishlist += $"{waifuname}\n";
+            }
+
+            DiscordEmbedBuilder em = new DiscordEmbedBuilder
+            {
+                Title = $"{owner}'s Wishlist",
+                Description = wishlist,
+                Color = GlobalVars.list
+            };
+
+            await ctx.RespondAsync(embed: em);
         }
 
         [Command("list"), Description("Shows your owned waifus"), Aliases("l")]
@@ -181,13 +284,13 @@ namespace _2DWaifus
             while (reader.Read())
             {
                 string ownerWaifus = reader.GetString(0);
-                GlobalVars.ownerWaifuList = JsonConvert.DeserializeObject<GlobalVars.Owaifulist>(ownerWaifus);
+                GlobalVars.ownerInfo = JsonConvert.DeserializeObject<GlobalVars.Owaifulist>(ownerWaifus);
             }
             reader.Close();
             GlobalVars.connection.Close();
 
             string waifulist = "";
-            foreach (string w in GlobalVars.ownerWaifuList.waifus)
+            foreach (string w in GlobalVars.ownerInfo.waifus)
             {
                 string waifuname = "";
                 GlobalVars.connection.Open();
@@ -261,13 +364,13 @@ namespace _2DWaifus
             while (waifulistreader.Read())
             {
                 string ownerWaifus = waifulistreader.GetString(0);
-                GlobalVars.ownerWaifuList = JsonConvert.DeserializeObject<GlobalVars.Owaifulist>(ownerWaifus);
+                GlobalVars.ownerInfo = JsonConvert.DeserializeObject<GlobalVars.Owaifulist>(ownerWaifus);
             }
             waifulistreader.Close();
             GlobalVars.connection.Close();
 
             string divorcedHarem = "{\"waifus\": [";
-            foreach (string w in GlobalVars.ownerWaifuList.waifus)
+            foreach (string w in GlobalVars.ownerInfo.waifus)
             {
                 if (w != waifuid)
                 {

@@ -15,7 +15,7 @@ namespace _2DWaifus
         public static DiscordColor list = new DiscordColor("00ffaa");
         public static JSecret secretJson;
         public static JConf confJson;
-        public static Owaifulist ownerWaifuList;
+        public static Owaifulist ownerInfo;
         public static List<string> unownedList = new List<string>();
         public static List<string> allList = new List<string>();
         public static MySqlConnection connection { get; set; }
@@ -45,6 +45,7 @@ namespace _2DWaifus
         public class Owaifulist
         {
             public string[] waifus = new string[] { "" };
+            public string[] wishes = new string[] { "" };
         }
     }
 }
