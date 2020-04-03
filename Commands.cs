@@ -224,9 +224,65 @@ namespace _2DWaifus
         }
 
         [Command("wishremove"), Description("Removes waifu from wishlist"), Aliases("wr")]
-        public async Task wishRemoveTask(CommandContext ctx)
+        public async Task wishRemoveTask(CommandContext ctx, params string[] waifuName)
         {
+            string name = Regex.Replace(String.Join(" ", waifuName).ToLower(), @"(^\w)|(\s\w)", x => x.Value.ToUpper());
+            string ownerid = ctx.Member.Id.ToString();
+            string waifuid = "";
+            bool waifuowned = false;
+            string waifuowner = "";
 
+            GlobalVars.connection.Open();
+            MySqlCommand waifuinfo = new MySqlCommand($"select * from waifus where name = '{name}'", GlobalVars.connection);
+            MySqlDataReader waifuinfoRead = waifuinfo.ExecuteReader();
+            while (waifuinfoRead.Read())
+            {
+                waifuid = waifuinfoRead.GetString(0);
+                waifuowned = waifuinfoRead.GetBoolean(3);
+                if (waifuowned)
+                {
+                    waifuowner = waifuinfoRead.GetString(4);
+                }
+            }
+            waifuinfoRead.Close();
+            GlobalVars.connection.Close();
+
+            GlobalVars.connection.Open();
+            MySqlCommand wishlistcmd = new MySqlCommand($"SELECT wishes FROM users WHERE id = '{ownerid}'", GlobalVars.connection);
+            MySqlDataReader wishlistreader = wishlistcmd.ExecuteReader();
+            while (wishlistreader.Read())
+            {
+                string ownerWishes = wishlistreader.GetString(0);
+                GlobalVars.ownerInfo = JsonConvert.DeserializeObject<GlobalVars.Owaifulist>(ownerWishes);
+            }
+            wishlistreader.Close();
+            GlobalVars.connection.Close();
+
+            string newwishlist = $"{{\"wishes\": [";
+            if (GlobalVars.ownerInfo.wishes.Contains<string>(waifuid))
+            {
+                List<string> waifu2 = GlobalVars.ownerInfo.wishes.ToList();
+                waifu2.Remove(waifuid);
+                foreach (string w in waifu2)
+                {
+                    newwishlist += $"\"{w}\",";
+                }
+                newwishlist = $"{newwishlist.Substring(0, newwishlist.Length - 1)}]}}";
+
+                GlobalVars.connection.Open();
+                MySqlCommand newwishlistcmd = new MySqlCommand($"update users set wishes = '{newwishlist}' where id = '{ownerid}'", GlobalVars.connection);
+                MySqlDataReader newwishreader = newwishlistcmd.ExecuteReader();
+                while (newwishreader.Read())
+                {
+                }
+                newwishreader.Close();
+                GlobalVars.connection.Close();
+
+                await ctx.RespondAsync("Waifu has been removed from your wishlist");
+            } else
+            {
+                await ctx.RespondAsync("You do not have this waifu wished");
+            }
         }
 
         [Command("wishlist"), Description("Shows your wishlist"), Aliases("wl")]
