@@ -247,11 +247,11 @@ namespace _2DWaifus
             GlobalVars.connection.Close();
 
             string wishlist = "";
-            foreach (string w in GlobalVars.ownerInfo.waifus)
+            foreach (string w in GlobalVars.ownerInfo.wishes)
             {
                 string waifuname = "";
                 GlobalVars.connection.Open();
-                MySqlCommand namecmd = new MySqlCommand($"select name from waifus where id = {w}", GlobalVars.connection);
+                MySqlCommand namecmd = new MySqlCommand($"select name from waifus where id = '{w}'", GlobalVars.connection);
                 MySqlDataReader namereader = namecmd.ExecuteReader();
                 while (namereader.Read())
                 {
