@@ -101,7 +101,13 @@ namespace _2DWaifus
                 {
                 }
                 updatereader.Close();
+                MySqlCommand updatewcmd = new MySqlCommand($"update waifus set owner = '{ownerid}' where id = '{rollID}'", GlobalVars.connection);
+                MySqlDataReader updatewreader = updatewcmd.ExecuteReader();
+                while (updatewreader.Read())
+                {
+                }
                 GlobalVars.connection.Close();
+
 
                 await ctx.RespondAsync($":sparkling_heart: {name} and {ctx.User.Username} are now married :sparkling_heart:");         
             }
@@ -382,8 +388,6 @@ namespace _2DWaifus
             string waifuid = "";
             bool owned = false;
             string owner = ctx.Member.Id.ToString();
-            Console.WriteLine(name);
-            Console.WriteLine(owner);
 
             GlobalVars.connection.Open();
             MySqlCommand divorceinfo = new MySqlCommand($"select * from waifus where name = '{name}'", GlobalVars.connection);
@@ -391,7 +395,8 @@ namespace _2DWaifus
             while (dinforead.Read())
             {
                 waifuid = dinforead.GetString(0);
-                if (dinforead.GetString(3) == "True" && dinforead.GetString(4) == owner)
+                Console.WriteLine(dinforead.GetString(4));
+                if (dinforead.GetBoolean(3) == true && dinforead.GetString(4) == owner)
                 {
                     owned = true;
                 } else
